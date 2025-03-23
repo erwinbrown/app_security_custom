@@ -1,10 +1,23 @@
 <?php
 
-use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    //echo "Hola Mondo";
+Route::middleware('guest')->group(function(){
 
-    DB::connection()->getPdo();
+    Route::get('/login', [AuthController::class, 'login'])->name('login');
+    Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate');
+
+});
+
+
+Route::middleware('auth')->group(function(){
+
+     Route::get('/', function(){
+         echo "Hola Mundo";
+     })->name('home');
+
+
+     
+     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 });

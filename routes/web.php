@@ -1,12 +1,13 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\MainController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function(){
-
+   
     Route::get('/login', [AuthController::class, 'login'])->name('login');
-    Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate');
+  Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate');
 
 
     // registro
@@ -20,9 +21,7 @@ Route::middleware('guest')->group(function(){
 
 Route::middleware('auth')->group(function(){
 
-     Route::get('/', function(){
-         echo "Hola Mundo";
-     })->name('home');
+     Route::get('/', [MainController::class, 'home'])->name('home');
 
      Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 

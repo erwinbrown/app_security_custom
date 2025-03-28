@@ -54,7 +54,7 @@ class AuthController extends Controller
                   return redirect()->route('home');
                 }
                 */
-
+               
             $user = User::where('username', $credentials['username'])
             ->where('active', true)
             ->where(function($query){
@@ -66,7 +66,7 @@ class AuthController extends Controller
             ->whereNull('deleted_at')
             ->first();
 
-
+            
             if(!$user)
             {
                 return back()->withInput()->with([
@@ -147,7 +147,7 @@ class AuthController extends Controller
       $user = new User();
       $user->username = $request->username;
       $user->email = $request->email;
-      $user->password = bcrypt('$request->password');
+      $user->password = bcrypt($request->password);
       $user->token = Str::random(64);
       
       $confirmation_link = route('mail_confirmation_user', ['token' => $user->token]);

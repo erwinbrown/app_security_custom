@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{{ asset('assets/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/fontawesome/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/main.css') }}">
-    <link rel="shortcut icon" href="{{ asset('assets/images/favicon.png" type="image/png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/favicon.png') }}">
 </head>
 
 <body>

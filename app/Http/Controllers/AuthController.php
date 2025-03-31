@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\NewUserConfirmation;
+use App\Mail\ResetPassword;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -194,5 +194,192 @@ class AuthController extends Controller
           return view('auth.new_user_confirmation');
            
     }
+
+
+    public function profileUser():View
+    {
+        return view('auth.profile');
+                        // route name profile
+    }
+
+    public function profileChangesPassword(Request $request):RedirectResponse|View
+    {
+         
+        $request->validate(
+                   [
+                     'current_password' => 'required|min:8|max:32|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
+                     'new_password' => 'required|min:8|max:32|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/|different:current_password',
+                     'new_password_confirmation' => 'required|same:new_password',
+
+                   ],
+                   [
+                     
+                      'current_password.required' =>'Es requerido el password actual.',
+                      'current_password.min' =>'Minimo 8 caracter clave',
+                      'current_password.max' =>'Maximo 32 caracter clave',
+                      'current_password.regex' =>'una letra miniscula, una letra mayuscula, un numero',
+                      'new_password.required' =>'Es requerido el password nuevo.',
+                      'new_password.min' =>'Minimo 8 caracter clave',
+                      'new_password.max' =>'Maximo 32 caracter clave',
+                      'new_password.regex' =>'una letra miniscula, una letra mayuscula, al menos un numero',
+                      'new_password.different' =>'Password debe ser diferente al Actual',
+                      'password_confirmation.required' => 'Confirmación de correo es necesario',
+                      'password_confirmation.same' => 'Dede ser igual a new password',
+
+                   ],
+
+
+            );
+
+            if(!password_verify($request->current_password, Auth::user()->password))
+            {
+
+               return back()->with([
+                'server_error' => 'El password Actual No coincide.'
+              
+               ]);
+
+
+            }
+         
+            
+
+             $user = Auth::user();
+             $user->password = bcrypt($request->new_password);
+             $user->save();
+
+             Auth::user()->password = $request->new_password;
+
+
+             return redirect()->route('profile')->with([
+
+                'success' => 'Cambio de password fue exitoso!'
+
+             ]);
+                 /* Mb891Top / usuario01 */
+
+    }
+
+    public function forgotPassword():View
+    {
+
+           return view('auth.forgot_password');
+             
+    }
+
+    public function SentResetPassword(Request $request)
+    {
+      $request->validate(
+        [
+          'email' => 'required|email',
+        ],
+        [
+
+           'email.required' => 'Correo es requerido para el reseteo de clave.',
+           'email.email' => 'Debe cumplir con formato correo',
+
+
+        ]
+      
+      );
+
+
+        $mensaje_reset = "Verifique su correo, para poder seguir el proceso de recuperacion de Password";
+
+        $user = User::where('email', $request->email)->first();
+
+          if(!$user) 
+          {
+              return back()->with([
+
+                  'server_message' => $mensaje_reset
+
+              ]);
+            
+          }
+         
+          $user->token = Str::random(64);
+          $token_link = route('valida_mail_resepass', ['token' => $user->token]);
+
+
+          $result = Mail::to($user->email)->send(new ResetPassword($user->username, $token_link));
+
+          if(!$result) 
+          {
+              return back()->with([
+
+                  'server_message' => $mensaje_reset
+
+              ]);
+            
+          }
+
+          $user->save();
+
+
+          return back()->with([
+
+            'server_message' => $mensaje_reset
+
+        ]);
+    }
+
+   public function emailVerifcaResetPassword(string $token):RedirectResponse | View
+    {
+          $usr = User::where('token', $token)->first();
+
+          if(!$usr) 
+          {
+
+             return redirect()->route('login');
+
+          }
+          
+        return view('auth.reset_password_client', ['token' => $token]);
+    } 
+    
+   
+
+    public function changesPassword(Request $request):RedirectResponse | View
+    {
+    
+          $request->validate(
+            [
+              'tokene' => 'required',
+              'new_password' => 'required|min:8|max:32|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/|different:current_password',
+              'new_password_confirmation' => 'required|same:new_password',
+            ],
+            [
+              
+              'tokene.required' =>'Token es requerido.',
+              'new_password.required' =>'Es requerido el password nuevo.',
+              'new_password.min' =>'Minimo 8 caracter clave',
+              'new_password.max' =>'Maximo 32 caracter clave',
+              'new_password.regex' =>'una letra miniscula, una letra mayuscula, al menos un numero',
+              'password_confirmation.required' => 'Confirmación de correo es necesario',
+              'password_confirmation.same' => 'Dede ser igual a new password',
+
+            ]
+        );  
+
+         $user = User::where('token', $request->tokene)->first();
+
+         if(!$user) 
+          {
+
+             return redirect()->route('login');
+
+          }
+
+          $user->password = bcrypt($request->new_password);
+          $user->token = null;
+          $user->save();
+
+        return redirect()->route('login')->with([
+       
+            'success' => true
+
+        ]);
+   } 
 
 }
